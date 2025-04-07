@@ -1,4 +1,7 @@
+package tests;
+
 import io.restassured.response.Response;
+import models.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -6,6 +9,7 @@ import static io.restassured.RestAssured.*;
 import static io.restassured.http.ContentType.JSON;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ReqresTests {
 
@@ -17,8 +21,12 @@ public class ReqresTests {
 
     @Test
     void createUserTest() {
-        String userData = "{\"name\": \"Timur\", \"job\": \"QA\"}";
-        given()
+
+        UserBodyModel userData = new UserBodyModel();
+        userData.setName("Timur");
+        userData.setJob("QA");
+
+        CreateUserModel responce = given()
                 .body(userData)
                 .contentType(JSON)
                 .log().all()
@@ -30,15 +38,24 @@ public class ReqresTests {
                 .log().status()
                 .log().body()
                 .statusCode(201)
-                .body("name", is("Timur"))
-                .body("job", is("QA"));
+                .extract().as(CreateUserModel.class);
+
+        assertEquals("Timur", responce.getName());
+        assertEquals("QA", responce.getJob());
     }
 
     @Test
     void updateUserNameTest() {
-        String userData = "{\"name\": \"Timur\", \"job\": \"QA\"}";
-        String userUpdateData = "{\"name\": \"Timur\", \"job\": \"QA Lead\"}";
-        Response response =
+
+        UserBodyModel userData = new UserBodyModel();
+        userData.setName("Timur");
+        userData.setJob("QA");
+
+        UserBodyModel userUpdateData = new UserBodyModel();
+        userUpdateData.setName("Timur");
+        userUpdateData.setJob("QA Lead");
+
+        CreateUserModel response =
             given()
                     .body(userData)
                     .contentType(JSON)
@@ -51,12 +68,13 @@ public class ReqresTests {
                     .log().status()
                     .log().body()
                     .statusCode(201)
-                    .body("name", is("Timur"))
-                    .body("job", is("QA"))
-                    .extract().response();
-        String userId = response.path("id");
+                    .extract().as(CreateUserModel.class);
 
-        given()
+        assertEquals("Timur", response.getName());
+        assertEquals("QA", response.getJob());
+        String userId = response.getId();
+
+        UpdateUserModel responce = given()
                 .body(userUpdateData)
                 .contentType(JSON)
                 .log().all()
@@ -68,22 +86,25 @@ public class ReqresTests {
                 .log().status()
                 .log().body()
                 .statusCode(200)
-                .body("name", is("Timur"))
-                .body("job", is("QA Lead"))
-                .extract().response();
+                .extract().as(UpdateUserModel.class);
+
+        assertEquals("Timur", responce.getName());
+        assertEquals("QA Lead", responce.getJob());
     }
 
     @Test
     void checkUserTest() {
-        given()
+        CheckUserModel responce = given()
                 .log().all()
                 .when()
                     .get("/users/2")
                 .then()
                 .statusCode(200)
                 .log().all()
-                .body("data.first_name", is("Janet"))
-                .body("data.last_name", is("Weaver"));
+                .extract().as(CheckUserModel.class);
+
+        assertEquals("Janet", responce.getData().getFirst_name());
+        assertEquals("Weaver", responce.getData().getLast_name());
     }
 
     @Test
@@ -99,10 +120,13 @@ public class ReqresTests {
     @Test
     void CountUserInListTest() {
 
-        given()
+        UserListModel responce = given()
                 .when()
                 .get("/users?page=2")
                 .then()
-                .body("per_page", is(6));
+                .log().all()
+                .extract().as(UserListModel.class);
+
+        assertEquals("6", responce.getPer_page());
     }
 }
