@@ -97,8 +97,8 @@ public class ReqresTests {
                     .extract().as(CheckUserModel.class));
 
         step("Проверить имя и фамилию пользователя с id = 2", ()-> {
-            assertEquals("Janet", responce.getData().getFirst_name());
-            assertEquals("Weaver", responce.getData().getLast_name());
+            assertEquals("Janet", responce.getData().getFirstName());
+            assertEquals("Weaver", responce.getData().getLastName());
         });
     }
 
