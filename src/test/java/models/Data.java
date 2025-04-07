@@ -1,7 +1,5 @@
 package models;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class Data {
 
     String id, email, first_name, last_name, avatar;
