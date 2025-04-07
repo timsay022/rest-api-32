@@ -1,23 +1,10 @@
 package models;
 
-public class CheckUserModel {
+import lombok.Data;
 
-    Data data;
+@lombok.Data
+public class CheckUserModel {
+    models.Data data;
     Support support;
 
-    public Support getSupport() {
-        return support;
-    }
-
-    public void setSupport(Support support) {
-        this.support = support;
-    }
-
-    public Data getData() {
-        return data;
-    }
-
-    public void setData(Data data) {
-        this.data = data;
-    }
 }

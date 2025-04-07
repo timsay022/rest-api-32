@@ -1,13 +1,16 @@
 package tests;
 
+import io.qameta.allure.restassured.AllureRestAssured;
 import models.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.*;
 import static io.restassured.http.ContentType.JSON;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static spec.MainSpec.*;
 
 public class ReqresTests {
 
@@ -24,22 +27,19 @@ public class ReqresTests {
         userData.setName("Timur");
         userData.setJob("QA");
 
-        CreateUserModel responce = given()
+        CreateUserModel responce = step("Создать пользователя", ()-> given(mainRequestSpec)
                 .body(userData)
-                .contentType(JSON)
-                .log().all()
+                .when()
+                    .post("/users")
 
-            .when()
-                .post("/users")
+                .then()
+                    .spec(createdResponseSpec)
+                    .extract().as(CreateUserModel.class));
 
-            .then()
-                .log().status()
-                .log().body()
-                .statusCode(201)
-                .extract().as(CreateUserModel.class);
-
-        assertEquals("Timur", responce.getName());
-        assertEquals("QA", responce.getJob());
+        step("Проверить данные пользователя:", ()-> {
+            assertEquals("Timur", responce.getName());
+            assertEquals("QA", responce.getJob());
+                });
     }
 
     @Test
@@ -53,78 +53,82 @@ public class ReqresTests {
         userUpdateData.setName("Timur");
         userUpdateData.setJob("QA Lead");
 
-        CreateUserModel response =
-            given()
-                    .body(userData)
-                    .contentType(JSON)
-                    .log().all()
-
-                    .when()
+        CreateUserModel response = step("Создать пользвателя", ()-> given(mainRequestSpec)
+                .body(userData)
+                .when()
                     .post("/users")
 
-                    .then()
-                    .log().status()
-                    .log().body()
-                    .statusCode(201)
-                    .extract().as(CreateUserModel.class);
+                .then()
+                    .spec(createdResponseSpec)
+                    .extract().as(CreateUserModel.class));
 
-        assertEquals("Timur", response.getName());
-        assertEquals("QA", response.getJob());
-        String userId = response.getId();
+        step("Проверить данные пользователя", ()-> {
+            assertEquals("Timur", response.getName());
+            assertEquals("QA", response.getJob());
+        });
 
-        UpdateUserModel responce = given()
+
+        String userId = step("Получить Id пользователя", response::getId);
+
+        UpdateUserModel responce = step("Изменить данные пользвателя", ()-> given(mainRequestSpec)
                 .body(userUpdateData)
-                .contentType(JSON)
-                .log().all()
 
             .when()
                 .patch("/users/" + userId)
 
             .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .extract().as(UpdateUserModel.class);
+                .spec(mainResponseSpec)
+                .extract().as(UpdateUserModel.class)
+        );
 
-        assertEquals("Timur", responce.getName());
-        assertEquals("QA Lead", responce.getJob());
+        step("Проверить измененные данные пользователя", ()-> {
+            assertEquals("Timur", responce.getName());
+            assertEquals("QA Lead", responce.getJob());
+        });
     }
 
     @Test
     void checkUserTest() {
-        CheckUserModel responce = given()
-                .log().all()
+        CheckUserModel responce = step("Найти пользователя с id = 2", ()-> given(mainRequestSpec)
+
                 .when()
                     .get("/users/2")
-                .then()
-                .statusCode(200)
-                .log().all()
-                .extract().as(CheckUserModel.class);
 
-        assertEquals("Janet", responce.getData().getFirst_name());
-        assertEquals("Weaver", responce.getData().getLast_name());
+                .then()
+                    .spec(mainResponseSpec)
+                    .extract().as(CheckUserModel.class));
+
+        step("Проверить имя и фамилию пользователя с id = 2", ()-> {
+            assertEquals("Janet", responce.getData().getFirst_name());
+            assertEquals("Weaver", responce.getData().getLast_name());
+        });
     }
 
     @Test
     void DeleteUserTest() {
 
-        given()
+        step("Удалить пользователя с id = 2", ()-> given(mainRequestSpec)
+
                 .when()
-                .delete("/users/2")
+                    .delete("/users/2")
+
                 .then()
-                .statusCode(204);
+                    .spec(noContentResponseSpec));
     }
 
     @Test
     void CountUserInListTest() {
 
-        UserListModel responce = given()
-                .when()
-                .get("/users?page=2")
-                .then()
-                .log().all()
-                .extract().as(UserListModel.class);
+        UserListModel responce = step("Открыть страницу с пользователями", ()-> given(mainRequestSpec)
 
-        assertEquals("6", responce.getPer_page());
+                .when()
+                    .get("/users?page=2")
+
+                .then()
+                    .spec(mainResponseSpec)
+                    .extract().as(UserListModel.class));
+
+        step("Проверить количество пользователей", ()->
+                assertEquals("6", responce.getPer_page()));
     }
 }
