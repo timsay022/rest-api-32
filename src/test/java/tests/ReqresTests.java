@@ -1,13 +1,11 @@
 package tests;
 
-import io.qameta.allure.restassured.AllureRestAssured;
 import models.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.*;
-import static io.restassured.http.ContentType.JSON;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static spec.MainSpec.*;
