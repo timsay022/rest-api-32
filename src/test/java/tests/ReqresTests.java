@@ -127,6 +127,6 @@ public class ReqresTests {
                     .extract().as(UserListModel.class));
 
         step("Проверить количество пользователей", ()->
-                assertEquals("6", responce.getPer_page()));
+                assertEquals("6", responce.getPerPage()));
     }
 }
