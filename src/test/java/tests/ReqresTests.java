@@ -7,13 +7,13 @@ import org.junit.jupiter.api.Test;
 import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static spec.MainSpec.*;
 
 public class ReqresTests {
 
     @BeforeAll
-    static void setuo() {
+    static void setUp() {
         baseURI = "https://reqres.in";
         basePath = "/api";
     }
@@ -25,7 +25,7 @@ public class ReqresTests {
         userData.setName("Timur");
         userData.setJob("QA");
 
-        CreateUserModel responce = step("Создать пользователя", ()-> given(mainRequestSpec)
+        CreateUserModel response = step("Создать пользователя", ()-> given(mainRequestSpec)
                 .body(userData)
                 .when()
                     .post("/users")
@@ -35,8 +35,8 @@ public class ReqresTests {
                     .extract().as(CreateUserModel.class));
 
         step("Проверить данные пользователя:", ()-> {
-            assertEquals("Timur", responce.getName());
-            assertEquals("QA", responce.getJob());
+            assertThat(response.getName()).isEqualTo(userData.getName());
+            assertThat(response.getJob()).isEqualTo(userData.getJob());
                 });
     }
 
@@ -51,7 +51,7 @@ public class ReqresTests {
         userUpdateData.setName("Timur");
         userUpdateData.setJob("QA Lead");
 
-        CreateUserModel response = step("Создать пользвателя", ()-> given(mainRequestSpec)
+        CreateUserModel firstResponse = step("Создать пользвателя", ()-> given(mainRequestSpec)
                 .body(userData)
                 .when()
                     .post("/users")
@@ -61,14 +61,14 @@ public class ReqresTests {
                     .extract().as(CreateUserModel.class));
 
         step("Проверить данные пользователя", ()-> {
-            assertEquals("Timur", response.getName());
-            assertEquals("QA", response.getJob());
+            assertThat(firstResponse.getName()).isEqualTo(userData.getName());
+            assertThat(firstResponse.getJob()).isEqualTo(userData.getJob());
         });
 
 
-        String userId = step("Получить Id пользователя", response::getId);
+        String userId = step("Получить Id пользователя", firstResponse::getId);
 
-        UpdateUserModel responce = step("Изменить данные пользвателя", ()-> given(mainRequestSpec)
+        UpdateUserModel secondResponse = step("Изменить данные пользвателя", ()-> given(mainRequestSpec)
                 .body(userUpdateData)
 
             .when()
@@ -80,14 +80,14 @@ public class ReqresTests {
         );
 
         step("Проверить измененные данные пользователя", ()-> {
-            assertEquals("Timur", responce.getName());
-            assertEquals("QA Lead", responce.getJob());
+            assertThat(secondResponse.getName()).isEqualTo(userUpdateData.getName());
+            assertThat(secondResponse.getJob()).isEqualTo(userUpdateData.getJob());
         });
     }
 
     @Test
     void checkUserTest() {
-        CheckUserModel responce = step("Найти пользователя с id = 2", ()-> given(mainRequestSpec)
+        CheckUserModel response = step("Найти пользователя с id = 2", ()-> given(mainRequestSpec)
 
                 .when()
                     .get("/users/2")
@@ -97,13 +97,13 @@ public class ReqresTests {
                     .extract().as(CheckUserModel.class));
 
         step("Проверить имя и фамилию пользователя с id = 2", ()-> {
-            assertEquals("Janet", responce.getData().getFirstName());
-            assertEquals("Weaver", responce.getData().getLastName());
+            assertThat(response.getData().getFirstName()).isEqualTo("Janet");
+            assertThat(response.getData().getLastName()).isEqualTo("Weaver");
         });
     }
 
     @Test
-    void DeleteUserTest() {
+    void deleteUserTest() {
 
         step("Удалить пользователя с id = 2", ()-> given(mainRequestSpec)
 
@@ -115,18 +115,19 @@ public class ReqresTests {
     }
 
     @Test
-    void CountUserInListTest() {
+    void countUserInListTest() {
 
-        UserListModel responce = step("Открыть страницу с пользователями", ()-> given(mainRequestSpec)
+        UserListModel response = step("Открыть страницу с пользователями", ()-> given(mainRequestSpec)
 
                 .when()
-                    .get("/users?page=2")
+                    .queryParam("page", "2")
+                    .get("/users")
 
                 .then()
                     .spec(mainResponseSpec)
                     .extract().as(UserListModel.class));
 
         step("Проверить количество пользователей", ()->
-                assertEquals("6", responce.getPerPage()));
+                assertThat(response.getPerPage()).isEqualTo("6"));
     }
 }
